@@ -648,12 +648,11 @@ def run_photo_audit(
             seen_plate      = _slot.get("plate")
             _main_dmg_count = len(damages)
 
-            # Smart zone skip — ONLY skip when the photo is clearly over-covered.
-            # Do NOT skip on 0-damage photos: those are close-ups of wheels, hood,
-            # windshield, mirror etc. where zones catch subtle scratches/chips that
-            # the full-image pass misses. Pre-flight already rejected non-car photos,
-            # so every photo here is a car photo worth zoning.
-            _run_zones = _main_dmg_count < 8
+            # For compressed images: always run zones to catch missed detail.
+            # ONLY skip zone analysis if damage count is very high (>12),
+            # which likely indicates false positives or an extremely damaged car.
+            # Zones help catch subtle damage on compressed photos (e.g. WhatsApp).
+            _run_zones = _main_dmg_count < 12
             zone_extra: list = []
             if _run_zones:
                 with ThreadPoolExecutor(max_workers=5) as _zex:
