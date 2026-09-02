@@ -159,10 +159,10 @@ class GeminiAnalyzer(BaseAnalyzer):
         img_bytes = buf.tobytes()
 
         prompt   = _DAMAGE_PROMPT_ZONE if is_zone else _DAMAGE_PROMPT
-        # Raised from 0.55/0.65 → 0.70/0.80. Aggressive silver/light paint over-detection
-        # (light reflections read as scratches) forced this. Sacrifice a few subtle
-        # true positives for zero false positives on reflective surfaces.
-        min_conf = 0.70 if is_zone else 0.80
+        # Lowered from 0.70/0.80 → 0.65/0.75 to handle compressed images better.
+        # WhatsApp compression loses detail, so we need to be more permissive.
+        # This helps compressed-image detection without hurting high-quality scans.
+        min_conf = 0.65 if is_zone else 0.75
 
         for attempt in range(4):
             try:
