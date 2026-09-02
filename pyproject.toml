@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "rentalshield"
+version = "0.1.0"
+description = "AI-powered car rental damage protection — video audit and company-report comparison"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "anthropic>=0.49",
+    "opencv-python>=4.8",
+    "pydantic>=2.0",
+    "pdfplumber>=0.10",
+    "reportlab>=4.0",
+    "loguru>=0.7",
+    "tenacity>=8.2",
+    "rich>=13.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.4",
+    "pytest-mock>=3.12",
+    "pytest-cov>=4.1",
+]
+api = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
+]
+
+[project.scripts]
+rs-audit   = "rentalshield.pipeline:audit_cli"
+rs-compare = "rentalshield.pipeline:compare_cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths    = ["tests"]
+markers      = [
+    "slow: requires real Claude API calls (use -m slow to run)",
+    "integration: end-to-end tests with real data",
+]
+addopts      = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src"]
+omit   = ["tests/*"]

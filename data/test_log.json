@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-08-15",
+    "audit_session": "20260815_170710",
+    "plate": "HC-397WW",
+    "car": "MG MG3",
+    "company": "TOR",
+    "company_pdf": "company_hc397ww_tor2023.pdf",
+    "company_count": 11,
+    "our_count": 9,
+    "matched": 4,
+    "missed": 7,
+    "new_undocumented": 5,
+    "recall_pct": 36.4,
+    "notes": "Video walkthrough only"
+  },
+  {
+    "date": "2026-08-18",
+    "audit_session": "20260818_142549",
+    "plate": "\u2014",
+    "car": "\u2014",
+    "company": "\u2014",
+    "company_pdf": "rental_company_report.pdf",
+    "company_count": 11,
+    "our_count": 0,
+    "matched": 0,
+    "missed": 11,
+    "new_undocumented": 0,
+    "recall_pct": 0.0,
+    "notes": ""
+  },
+  {
+    "date": "2026-08-18",
+    "audit_session": "20260818_125518",
+    "plate": "\u2014",
+    "car": "\u2014",
+    "company": "\u2014",
+    "company_pdf": "rental_company_report.pdf",
+    "company_count": 11,
+    "our_count": 14,
+    "matched": 7,
+    "missed": 4,
+    "new_undocumented": 7,
+    "recall_pct": 63.6,
+    "notes": ""
+  }
+]

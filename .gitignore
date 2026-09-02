@@ -1,0 +1,34 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Project output (never commit generated reports or crops)
+data/output/
+data/input/videos/
+data/input/company_reports/
+
+# Keep the directory structure but ignore data
+!data/input/videos/.gitkeep
+!data/input/company_reports/.gitkeep
+!data/output/.gitkeep
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
