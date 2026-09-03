@@ -79,6 +79,14 @@ class GeminiAnalyzer(BaseAnalyzer):
         import threading as _th
         self._tls = _th.local()
 
+        # Cost tracking: cumulative tokens for this analyzer instance
+        self.total_vision_input_tokens = 0
+        self.total_vision_output_tokens = 0
+        self.total_text_input_tokens = 0
+        self.total_text_output_tokens = 0
+        self.vision_call_count = 0
+        self.text_call_count = 0
+
         # Shared generation config used for every vision call.
         # temperature=0  → greedy decoding, fully deterministic output.
         # thinking_budget=0 → disables chain-of-thought (saves ~90% of quota).
@@ -175,6 +183,13 @@ class GeminiAnalyzer(BaseAnalyzer):
                     config   = self._vision_config,
                 )
                 raw = response.text.strip()
+
+                # Track token usage for cost calculation
+                if hasattr(response, 'usage_metadata') and response.usage_metadata:
+                    self.total_vision_input_tokens += response.usage_metadata.prompt_token_count or 0
+                    self.total_vision_output_tokens += response.usage_metadata.candidates_token_count or 0
+                    self.vision_call_count += 1
+
                 # Success — clear any pending cooldown
                 self._next_ok_at = 0.0
                 damages, plate, view = _parse_response(raw, frame_no, time_sec,
@@ -255,6 +270,13 @@ class GeminiAnalyzer(BaseAnalyzer):
             ],
             config   = self._vision_config,
         )
+
+        # Track token usage for cost calculation
+        if hasattr(response, 'usage'):
+            self.total_vision_input_tokens += response.usage.prompt_tokens or 0
+            self.total_vision_output_tokens += response.usage.completion_tokens or 0
+            self.vision_call_count += 1
+
         return response.text.strip()
 
     def generate_text(self, prompt: str) -> str:
@@ -265,6 +287,13 @@ class GeminiAnalyzer(BaseAnalyzer):
                     model    = self._text_model,   # lighter model, own quota
                     contents = [prompt],
                 )
+
+                # Track token usage for cost calculation
+                if hasattr(response, 'usage'):
+                    self.total_text_input_tokens += response.usage.prompt_tokens or 0
+                    self.total_text_output_tokens += response.usage.completion_tokens or 0
+                    self.text_call_count += 1
+
                 return response.text.strip()
             except Exception as exc:
                 err_str = str(exc)

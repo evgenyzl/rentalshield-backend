@@ -1015,6 +1015,28 @@ def run_photo_audit(
     except Exception as exc:
         logger.warning("Evidence package failed (non-fatal): {}", exc)
 
+    # ── Cost calculation ──────────────────────────────────────────────────────
+    from rentalshield.pricing import calculate_vision_cost, calculate_text_cost, USD_TO_NIS
+
+    vision_cost_usd, _ = calculate_vision_cost(
+        analyzer.total_vision_input_tokens,
+        analyzer.total_vision_output_tokens
+    )
+    text_cost_usd, _ = calculate_text_cost(
+        analyzer.total_text_input_tokens,
+        analyzer.total_text_output_tokens
+    )
+
+    session.api_cost_usd = vision_cost_usd + text_cost_usd
+    session.api_cost_nis = session.api_cost_usd * USD_TO_NIS
+    session.vision_calls = analyzer.vision_call_count
+    session.text_calls = analyzer.text_call_count
+
+    console.print(
+        f"[dim]API Cost:[/dim] ${session.api_cost_usd:.4f} ({session.api_cost_nis:.2f} NIS) | "
+        f"{session.vision_calls} vision calls + {session.text_calls} text calls"
+    )
+
     return session
 
 

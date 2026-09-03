@@ -129,6 +129,11 @@ class AuditSession(BaseModel):
     audit_pdf:     Optional[Path] = None
     metadata:      Optional[RentalMetadata] = None
     covered_views: list[str] = Field(default_factory=list)  # e.g. ["front","rear","left_side"]
+    # Cost tracking
+    api_cost_usd:  float = 0.0         # Total Gemini API cost in USD
+    api_cost_nis:  float = 0.0         # Total cost in NIS (USD * 3.67)
+    vision_calls:  int = 0              # Number of vision API calls
+    text_calls:    int = 0              # Number of text API calls
 
     @property
     def new_damage_count(self) -> int:

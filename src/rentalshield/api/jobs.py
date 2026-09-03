@@ -40,6 +40,11 @@ class Job:
     covered_views: list[str] = field(default_factory=list)
     damage_list:  list[dict] = field(default_factory=list)   # [{type, location, severity, photo}]
     error_msg:   Optional[str] = None
+    # Cost tracking (Gemini API usage)
+    api_cost_usd: float = 0.0         # Total API cost in USD
+    api_cost_nis: float = 0.0         # Total API cost in NIS (USD * 3.67)
+    vision_calls: int = 0              # Number of vision API calls
+    text_calls: int = 0                # Number of text API calls
     # Comparison data (set after POST /audit/{job_id}/compare)
     comparison:  Optional[dict] = None   # full comparison result JSON
 

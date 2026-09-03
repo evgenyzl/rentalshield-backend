@@ -301,6 +301,13 @@ def job_status(job_id: str):
         resp["damage_list"]   = job.damage_list
         resp["report_url"]    = f"/audit/{job.id}/report"
         resp["evidence_url"]  = f"/audit/{job.id}/evidence"
+        # Cost tracking
+        resp["api_cost_usd"]  = round(job.api_cost_usd, 4)
+        resp["api_cost_nis"]  = round(job.api_cost_nis, 2)
+        resp["api_calls"]     = {
+            "vision": job.vision_calls,
+            "text": job.text_calls,
+        }
     if job.status == JobStatus.ERROR:
         resp["error"] = job.error_msg
 
@@ -388,13 +395,22 @@ def _run_pipeline(job: Job, metadata_kwargs: dict, logo_path: "Path | None" = No
             for d in session.damages
         ]
 
+        # Cost tracking
+        job.api_cost_usd = session.api_cost_usd
+        job.api_cost_nis = session.api_cost_nis
+        job.vision_calls = session.vision_calls
+        job.text_calls = session.text_calls
+
         job.status   = JobStatus.DONE
         job.progress = (
             f"Done — {job.damages_count} damage(s) found."
             if job.damages_count
             else "Done — no damage detected."
         )
-        logger.info("Job {}: completed ({} damages)", job.id, job.damages_count)
+        logger.info(
+            "Job {}: completed ({} damages, ${:.4f} USD / {:.2f} NIS)",
+            job.id, job.damages_count, job.api_cost_usd, job.api_cost_nis
+        )
 
     except Exception as exc:
         logger.exception("Job {}: pipeline error — {}", job.id, exc)
