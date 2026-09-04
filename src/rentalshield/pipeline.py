@@ -1042,6 +1042,16 @@ def run_photo_audit(
         f"{session.vision_calls} vision calls + {session.text_calls} text calls"
     )
 
+    # ── Cost audit log ────────────────────────────────────────────────────────
+    logger.info("COST AUDIT: Detailed call breakdown:")
+    logger.info("Call Type | Input Tokens | Output Tokens | Cost (USD)")
+    for call in analyzer.call_log:
+        inp = call['input_tokens']
+        out = call['output_tokens']
+        cost = (inp / 1_000_000 * 0.075) + (out / 1_000_000 * 0.3)
+        logger.info("{}  {}  {}  ${:.6f}", call['type'].ljust(25), str(inp).rjust(12), str(out).rjust(12), cost)
+    logger.info("Total calls: {}", len(analyzer.call_log))
+
     return session
 
 

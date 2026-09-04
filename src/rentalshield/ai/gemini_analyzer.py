@@ -86,6 +86,7 @@ class GeminiAnalyzer(BaseAnalyzer):
         self.total_text_output_tokens = 0
         self.vision_call_count = 0
         self.text_call_count = 0
+        self.call_log = []  # Detailed log of each API call for cost audit
 
         # Shared generation config used for every vision call.
         # temperature=0  → greedy decoding, fully deterministic output.
@@ -186,9 +187,18 @@ class GeminiAnalyzer(BaseAnalyzer):
 
                 # Track token usage for cost calculation
                 if hasattr(response, 'usage_metadata') and response.usage_metadata:
-                    self.total_vision_input_tokens += response.usage_metadata.prompt_token_count or 0
-                    self.total_vision_output_tokens += response.usage_metadata.candidates_token_count or 0
+                    inp = response.usage_metadata.prompt_token_count or 0
+                    out = response.usage_metadata.candidates_token_count or 0
+                    self.total_vision_input_tokens += inp
+                    self.total_vision_output_tokens += out
                     self.vision_call_count += 1
+                    # Log for cost audit
+                    self.call_log.append({
+                        'type': 'vision_main',
+                        'input_tokens': inp,
+                        'output_tokens': out,
+                        'frame': frame_no
+                    })
 
                 # Success — clear any pending cooldown
                 self._next_ok_at = 0.0
@@ -272,10 +282,17 @@ class GeminiAnalyzer(BaseAnalyzer):
         )
 
         # Track token usage for cost calculation
-        if hasattr(response, 'usage'):
-            self.total_vision_input_tokens += response.usage.prompt_tokens or 0
-            self.total_vision_output_tokens += response.usage.completion_tokens or 0
+        if hasattr(response, 'usage_metadata') and response.usage_metadata:
+            inp = response.usage_metadata.prompt_token_count or 0
+            out = response.usage_metadata.candidates_token_count or 0
+            self.total_vision_input_tokens += inp
+            self.total_vision_output_tokens += out
             self.vision_call_count += 1
+            self.call_log.append({
+                'type': 'vision_text_with_image',
+                'input_tokens': inp,
+                'output_tokens': out
+            })
 
         return response.text.strip()
 
@@ -289,10 +306,17 @@ class GeminiAnalyzer(BaseAnalyzer):
                 )
 
                 # Track token usage for cost calculation
-                if hasattr(response, 'usage'):
-                    self.total_text_input_tokens += response.usage.prompt_tokens or 0
-                    self.total_text_output_tokens += response.usage.completion_tokens or 0
+                if hasattr(response, 'usage_metadata') and response.usage_metadata:
+                    inp = response.usage_metadata.prompt_token_count or 0
+                    out = response.usage_metadata.candidates_token_count or 0
+                    self.total_text_input_tokens += inp
+                    self.total_text_output_tokens += out
                     self.text_call_count += 1
+                    self.call_log.append({
+                        'type': 'text_only',
+                        'input_tokens': inp,
+                        'output_tokens': out
+                    })
 
                 return response.text.strip()
             except Exception as exc:
