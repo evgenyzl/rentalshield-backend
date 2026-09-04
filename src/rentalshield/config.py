@@ -35,6 +35,14 @@ class Settings:
                                             "claude-opus-4-5")
     claude_max_tokens: int = 1024
 
+    # ── Feature flags ────────────────────────────────────────────────────────────
+    # Component identifier refinement: calls Gemini to refine damage locations
+    # True (default): "bumper lip / bumper panel" (precise, +2.7 NIS cost)
+    # False: "front bumper" (simpler, saves 2.7 NIS but less precise)
+    enable_component_refinement: bool = os.environ.get(
+        "RENTALSHIELD_COMPONENT_REFINEMENT", "true"
+    ).lower() in ("true", "1", "yes")
+
     # ── Video analysis ────────────────────────────────────────────────────────
     frame_interval_s: float = float(
         os.environ.get("RENTALSHIELD_FRAME_INTERVAL_S", "3")

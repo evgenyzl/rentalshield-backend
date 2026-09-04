@@ -865,27 +865,32 @@ def run_photo_audit(
     # Each worker gets a fresh rate-limit tracker — no inter-thread sleeping.
     if session.damages:
         from concurrent.futures import ThreadPoolExecutor, as_completed as _as_completed2
-        console.print("[dim]Identifying components …[/dim]")
-
-        def _refine_one(dmg):
-            lc = [0.0]   # fresh per call — no rate-limit sleep between workers
-            refined = refine_location(dmg, analyzer, lc)
-            quota_hit = lc[0] == float("inf")
-            return dmg, refined, quota_hit
-
+        # ── Component refinement (feature flag) ────────────────────────────────
         refinements: dict = {}
         quota_exhausted = False
-        with ThreadPoolExecutor(max_workers=4) as _ex:
-            futs = [_ex.submit(_refine_one, d) for d in session.damages]
-            for fut in _as_completed2(futs):
-                dmg, refined, hit = fut.result()
-                if hit:
-                    quota_exhausted = True
-                if refined:
-                    refinements[id(dmg)] = (dmg, refined)
 
-        if quota_exhausted:
-            console.print("  [dim]Component identification skipped — daily quota exhausted[/dim]")
+        if settings.enable_component_refinement:
+            console.print("[dim]Identifying components …[/dim]")
+
+            def _refine_one(dmg):
+                lc = [0.0]   # fresh per call — no rate-limit sleep between workers
+                refined = refine_location(dmg, analyzer, lc)
+                quota_hit = lc[0] == float("inf")
+                return dmg, refined, quota_hit
+
+            with ThreadPoolExecutor(max_workers=4) as _ex:
+                futs = [_ex.submit(_refine_one, d) for d in session.damages]
+                for fut in _as_completed2(futs):
+                    dmg, refined, hit = fut.result()
+                    if hit:
+                        quota_exhausted = True
+                    if refined:
+                        refinements[id(dmg)] = (dmg, refined)
+
+            if quota_exhausted:
+                console.print("  [dim]Component identification skipped — daily quota exhausted[/dim]")
+        else:
+            console.print("[dim]Component refinement disabled (RENTALSHIELD_COMPONENT_REFINEMENT=false)[/dim]")
 
         # Cross-validation: if refinement contradicts what the AI said in the
         # description, the bounding box was pointing to the wrong area — DROP

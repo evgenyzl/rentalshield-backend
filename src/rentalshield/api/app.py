@@ -1430,12 +1430,29 @@ window.addEventListener('offline', () => {
 
 // ── Polling ─────────────────────────────────────────────────────────────
 // consecutiveFailures: transient blips (up to 3 in a row) are swallowed
-// silently — the scan keeps polling. Only a persistent outage surfaces
-// as an error message. Prevents "Connection error" flashes on shaky Wi-Fi.
-function poll(jobId, pct, consecutiveFailures) {
+// Poll with timeout and better error handling
+function poll(jobId, pct, consecutiveFailures, elapsed) {
+  elapsed = (elapsed || 0) + 3;
+
+  // Timeout after 120 seconds (should complete in 70s normally)
+  if (elapsed > 120000) {
+    showError('⏱ Scan took too long. Please check your internet connection and try again.');
+    return;
+  }
+
   setTimeout(async () => {
     try {
-      const data = await (await fetch(`/audit/${jobId}`)).json();
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 5000);  // 5s HTTP timeout
+
+      const resp = await fetch(`/audit/${jobId}`, { signal: ctrl.signal });
+      clearTimeout(timeout);
+
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}`);
+      }
+
+      const data = await resp.json();
       if (data.status === 'done') {
         setProgress(100, 'Complete!');
         showResult(data);
@@ -1444,15 +1461,19 @@ function poll(jobId, pct, consecutiveFailures) {
       } else {
         pct = Math.min(pct + 5, 88);
         setProgress(pct, data.progress || 'Analysing …');
-        poll(jobId, pct, 0);   // reset failure counter after a success
+        poll(jobId, pct, 0, elapsed);   // reset failure counter
       }
     } catch(e) {
       const fails = (consecutiveFailures || 0) + 1;
-      if (fails < 4) {
-        // Transient — keep trying, don't scare the user.
-        poll(jobId, pct, fails);
+      if (fails < 3) {
+        // Transient error — retry quietly
+        poll(jobId, pct, fails, elapsed);
       } else {
-        showError('Lost connection to the server. Your photos are safe — please refresh and check the job later.');
+        // Persistent error — show it
+        const msg = e.name === 'AbortError'
+          ? '🌐 Connection timeout. Please check your internet and refresh to retry.'
+          : '🌐 Network error. Please check your connection and refresh to retry.';
+        showError(msg);
       }
     }
   }, 3000);
