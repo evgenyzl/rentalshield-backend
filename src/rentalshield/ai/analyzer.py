@@ -186,10 +186,10 @@ _DAMAGE_PROMPT_ZONE = _DAMAGE_PROMPT.replace(
     "confidence: certainty this is real damage (0.0–1.0). Only include if ≥ 0.80.",
     (
         "confidence: certainty this is real damage (0.0–1.0). Include if ≥ 0.70 — "
-        "this is a zoomed crop of one section of the car. Report clear paint breaks, "
-        "gouges, dents, chips, and paint transfer. DO NOT report reflections, "
-        "highlights, shadows, dust, or normal panel curvature — those are common "
-        "false positives on close-up crops."
+        "this is a zoomed crop of one section of the car. Report EVERY visible damage: "
+        "paint breaks, scratches, gouges, dents, chips, paint transfer, seal/trim defects. "
+        "Include minor/faint marks. Even hairline scratches and small chips must be reported. "
+        "DO NOT report: reflections, highlights, shadows, dust, or normal panel curvature."
     ),
 )
 

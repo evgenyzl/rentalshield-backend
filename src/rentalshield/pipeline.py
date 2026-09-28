@@ -528,12 +528,14 @@ def run_photo_audit(
             """
             run1 = _analyze_with_timeout(frame, photo_no, timeout=timeout)
 
-            # Optimization: skip second pass if first pass is very confident
-            _CONFIDENT_THRESHOLD = 0.85  # skip re-scan if all detections > this
-            if run1 and all(dmg.confidence >= _CONFIDENT_THRESHOLD for dmg in run1):
-                logger.debug("Photo {}: all detections high-confidence (>= {}) — skipping second pass",
-                           photo_no, _CONFIDENT_THRESHOLD)
-                return run1
+            # DISABLED: aggressive optimization that was skipping second pass and losing damages.
+            # The second pass OFTEN finds damages missed by first pass due to LLM non-determinism.
+            # We need BOTH passes for maximum recall (21-22 damages instead of 16).
+            # _CONFIDENT_THRESHOLD = 0.85  # skip re-scan if all detections > this
+            # if run1 and all(dmg.confidence >= _CONFIDENT_THRESHOLD for dmg in run1):
+            #     logger.debug("Photo {}: all detections high-confidence (>= {}) — skipping second pass",
+            #                photo_no, _CONFIDENT_THRESHOLD)
+            #     return run1
 
             run2 = _analyze_with_timeout(frame, photo_no, timeout=timeout)
 
@@ -692,7 +694,10 @@ def run_photo_audit(
         # Aggregate results in photo_no order after all workers complete.
         # 2 workers = sweet spot: fast enough, safely under Gemini free-tier
         # RPM quota. 3+ workers trigger 429 rate-limits → 180s backoff → slower.
-        _PHOTO_CONCURRENCY = 2
+        # SEQUENTIAL PROCESSING: max_workers=1 (avoids Gemini rate-limit hits)
+        # Parallel processing (2+) triggers rate limits on free/paid tier
+        # Sequential: ~3-4 min per scan vs ~20 min with rate-limit waits
+        _PHOTO_CONCURRENCY = 1
         photos_input = list(extractor.frames())
         results_by_no: dict[int, dict] = {}
 

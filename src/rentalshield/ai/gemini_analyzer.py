@@ -90,6 +90,8 @@ class GeminiAnalyzer(BaseAnalyzer):
 
         # Shared generation config used for every vision call.
         # temperature=0  → greedy decoding, fully deterministic output.
+        #   With temp=0, Gemini ALWAYS picks the highest-probability token next,
+        #   making the output deterministic: same photo = same damages every run.
         # thinking_budget=0 → disables chain-of-thought (saves ~90% of quota).
         self._vision_config = types.GenerateContentConfig(
             temperature     = 0,
@@ -168,9 +170,8 @@ class GeminiAnalyzer(BaseAnalyzer):
         img_bytes = buf.tobytes()
 
         prompt   = _DAMAGE_PROMPT_ZONE if is_zone else _DAMAGE_PROMPT
-        # Aggressively lowered to 0.55/0.65 for compressed images.
-        # WhatsApp compression severely reduces detail. Accept more false positives
-        # to catch missed damage on compressed photos. High-quality scans still work.
+        # REVERTED: 0.55/0.65 (original - balanced accuracy vs false positives)
+        # Previous ultra-aggressive (0.40/0.50) created too many false positives
         min_conf = 0.55 if is_zone else 0.65
 
         for attempt in range(4):
