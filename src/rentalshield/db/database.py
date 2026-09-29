@@ -2,7 +2,7 @@
 Database connection and session management.
 """
 
-from sqlalchemy import create_engine, pool
+from sqlalchemy import create_engine, pool, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from typing import Generator
@@ -95,7 +95,7 @@ def verify_db_connection():
     """Verify database connection is working."""
     try:
         with SessionLocal() as db:
-            db.execute("SELECT 1")
+            db.execute(text("SELECT 1"))
         logger.info("✓ Database connection verified")
         return True
     except Exception as e:
