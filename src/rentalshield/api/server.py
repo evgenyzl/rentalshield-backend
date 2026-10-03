@@ -25,12 +25,13 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
 
-        # If it's a redirect with a Location header, fix it to use HTTPS
+        # Only fix for production URLs (not localhost)
         if "location" in response.headers and response.headers["location"].startswith("http://"):
             location = response.headers["location"]
-            location = location.replace("http://", "https://", 1)
-            response.headers["location"] = location
-            logger.debug(f"Fixed redirect: {location}")
+            if "localhost" not in location and "127.0.0.1" not in location:
+                location = location.replace("http://", "https://", 1)
+                response.headers["location"] = location
+                logger.debug(f"Fixed redirect: {location}")
 
         return response
 

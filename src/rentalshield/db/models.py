@@ -79,6 +79,7 @@ class CarProfile(Base):
     vin = Column(String(50), nullable=True)  # Vehicle Identification Number
     color = Column(String(50), nullable=True)  # e.g., "Silver"
     mileage_at_pickup = Column(Integer, nullable=True)
+    photo_url = Column(String(500), nullable=True)  # Car photo URL
 
     # Rental timeline
     rental_start_date = Column(DateTime, nullable=False)
