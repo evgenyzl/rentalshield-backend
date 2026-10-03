@@ -17,6 +17,25 @@ from rentalshield.i18n.middleware import LanguageMiddleware
 
 
 # ============================================================================
+# CUSTOM MIDDLEWARE
+# ============================================================================
+
+class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
+    """Fix redirect Location headers to use HTTPS (Railway sends redirects with HTTP)."""
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+
+        # If it's a redirect with a Location header, fix it to use HTTPS
+        if "location" in response.headers and response.headers["location"].startswith("http://"):
+            location = response.headers["location"]
+            location = location.replace("http://", "https://", 1)
+            response.headers["location"] = location
+            logger.debug(f"Fixed redirect: {location}")
+
+        return response
+
+
+# ============================================================================
 # LIFESPAN EVENTS
 # ============================================================================
 
@@ -68,6 +87,9 @@ def create_app() -> FastAPI:
     # ========================================================================
     # MIDDLEWARE
     # ========================================================================
+
+    # Fix HTTP redirects to HTTPS (Railway sometimes sends HTTP in Location headers)
+    app.add_middleware(HTTPSRedirectMiddleware)
 
     # Trust proxy headers for HTTPS detection (Railway sends X-Forwarded-Proto)
     app.add_middleware(
