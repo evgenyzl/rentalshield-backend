@@ -4,6 +4,8 @@ FastAPI application factory and middleware setup.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from loguru import logger
@@ -66,6 +68,12 @@ def create_app() -> FastAPI:
     # ========================================================================
     # MIDDLEWARE
     # ========================================================================
+
+    # Trust proxy headers for HTTPS detection (Railway sends X-Forwarded-Proto)
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["*"],
+    )
 
     # CORS middleware
     app.add_middleware(

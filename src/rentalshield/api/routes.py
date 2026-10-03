@@ -24,6 +24,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from loguru import logger
 
 from rentalshield.api.jobs import Job, JobStatus, get_job, new_job
+from rentalshield.api.routes.documents import router as documents_router
 
 _UA = "Mozilla/5.0 (compatible; RentalShield/1.0)"
 
@@ -149,6 +150,9 @@ def _fetch_car_image_server(car_model: str, out_dir: Path) -> Path | None:
     return None
 
 router = APIRouter()
+
+# Include document parsing routes
+router.include_router(documents_router, tags=["documents"])
 
 # Uploads live next to the project's data folder
 _UPLOADS_DIR = Path(__file__).parent.parent.parent.parent.parent / "data" / "uploads"
